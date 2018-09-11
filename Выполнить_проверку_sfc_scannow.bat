@@ -22,6 +22,7 @@ cd /d %~dp0
 
 set log=%windir%\Logs\CBS\sfcdoc.log
 set log2=%windir%\Logs\CBS\sfcdoc2.log
+set log3=%WinDir%\Logs\CBS\CheckSUR.log
 set eventlog=%windir%\Logs\CBS\eventlog.log 
 set dismlog=%windir%\Logs\DISM\dism.log
 set cod86=chcp 866>nul
@@ -101,12 +102,14 @@ exit /b
  
  
  :TestElevate
-	echo. >> "%log%"  && (echo ...Есть права доступа к лог файлам... >> %log%) || (
+	echo. >> "%log%"  && (echo ...Есть права доступа к лог файлам... >> %log%
+	echo. > "%log2%"	) || (
 	set log=%tmp%\sfcdoc.log
 	set log2=%tmp%\sfcdoc2.log
 		echo. >> "%log%"
 		echo. >> "%log%"
-		echo  ===TestElevate=== > "%log%" 
+		echo  ===TestElevate=== > "%log%"
+		echo  ===TestElevate=== > "%log%2"
 		echo  ===TestElevate===
 		echo Проверка доступа к файлам логов >> "%log%"
 		echo Обнаружено отсутствие прав доступа к каталогу %windir%\Logs\CBS, будет назначен временный каталог >> "%log%"
@@ -171,10 +174,11 @@ if %ErrorLevel% EQU 1 ( Call :sfco
 							call :open 
 								call :os1 )
 
-if %ErrorLevel% EQU 2 ( Call :sfco 
-							call :pcinfo
-								call :open 
-									call :os1 )
+if %ErrorLevel% EQU 2 ( call :Restorehealth1
+							Call :sfco 
+								call :pcinfo
+									call :open 
+										call :os1 )
 																		
 if %ErrorLevel% EQU 3 ( Call :findstrlog 
 							call :pcinfo
@@ -289,6 +293,7 @@ Echo Использованы дополнительные параметры: >>"%log%"
 Echo. >>"%log%"
 Echo. >>"%log%"
 type "%log2%" >>"%log%" 
+if %os% EQU 1 type "%log3%" >>"%log%" 
 exit /b
 
 :pcinfo
@@ -515,8 +520,52 @@ echo Нажмите клавишу ENTER чтобы продолжить
 pause > nul
 exit /b
 
+:Restorehealth1
 
+echo.
+		echo Ожидайте...
+wmic qfe list | find "KB2966583"
 
+	if %ErrorLevel% EQU 0 (
+		cls 
+			echo Сейчас будет произведено восстановление хранилища компонентов Windows
+			echo Убедитесь, что вы подключены к сети Интернет и дождитесь завершения 
+			echo операции восстановления
+				DISM /Online /Cleanup-Image /ScanHealth
+					(if %ErrorLevel% EQU 0 (
+						echo Восстановление хранилища данных прошло корректно.
+						echo ......... Восстановление компонентов хранилища завершено корректно >>"%log2%"		
+							) else ( echo ......... Восстановление компонентов хранилища завершено НЕ корректно >>"%log2%" ))
+		)  else (
+			
+			cls
+			echo.
+			echo Для запуска процедуры восстановления необходимо установить обовление KB2966583
+			echo Скопируйте ссылку, если страница загрузки не открылась автоматически
+			echo откройте в браузере и скачайте, затем произведите установку
+			echo После установки обновления перезагрузите компьютер и заново воспользуйтесь 
+			echo данным скриптом.
+			echo.
+			
+				(if %arhitektura% EQU 32 (
+					start https://www.microsoft.com/ru-RU/download/details.aspx?id=43524
+						echo https://www.microsoft.com/ru-RU/download/details.aspx?id=43524
+						echo ......... Внимание! Не установлено обновление KB2966583 >>"%log2%" 
+						echo ......... https://www.microsoft.com/ru-RU/download/details.aspx?id=43524 >>"%log2%" 
+						echo.
+						pause
+					Call :Exite	
+				) else (
+					start https://www.microsoft.com/ru-RU/download/details.aspx?id=43484
+						echo https://www.microsoft.com/ru-RU/download/details.aspx?id=43484
+						echo ......... Внимание! Не установлено обновление KB2966583 >>"%log2%" 
+						echo ......... https://www.microsoft.com/ru-RU/download/details.aspx?id=43524 >>"%log2%" )) 
+						echo.
+						pause
+					Call :Exite
+				)
+		pause
+		exit /b
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Очистка хранилища компонентов
