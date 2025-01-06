@@ -201,8 +201,15 @@ echo Для выбора введите цифру и нажмите клавишу ENTER
 echo.
 echo.
 		
-call :choice "Запустить стандартную проверку" "Запустить расширенную процедуру проверки и восстановления" "Очистить Хранилище компонентов"^
- "Открыть результаты последнего сканирования" "Справка" "Выход" 
+set options="Запустить стандартную проверку" "Запустить расширенную процедуру проверки и восстановления" "Очистить Хранилище компонентов"
+
+if exist %log% (
+    set options=%options% "Открыть результаты последнего сканирования"
+)
+
+set options=%options% "Справка" "Выход"
+
+call :choice %options%
 
 if %ErrorLevel% EQU 1 ( Call :sfco
 							call :open 
@@ -216,10 +223,14 @@ if %ErrorLevel% EQU 2 ( call :Restorehealth
 if %ErrorLevel% EQU 3 ( Call :Clearhealth 
 								call :os0 )
 
-if %ErrorLevel% EQU 4 ( Call :findstrlog 
-							call :pcinfo
-								call :open 
-									call :os0 )
+if exist %log% (
+    if %ErrorLevel% EQU 4 (
+							Call :findstrlog 
+							call :pcinfo 
+							call :open 
+							call :os0 
+						)
+					)
 
 if %ErrorLevel% EQU 5 ( Call :Help 
 								call :os0 )
@@ -344,7 +355,7 @@ echo %windir%\Logs\CBS
 echo.
 :: Открыть "чистый" отчет программой по-умолчанию
 start "" "%CD%"
-start "" "%log%"
+start "" "sfcdoc.log"
 del /q %log%
 del /q %log2%
 echo Нажмите клавишу ENTER чтобы продолжить...
