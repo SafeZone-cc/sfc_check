@@ -3,7 +3,7 @@
 
 @echo off >nul
  Chcp 866 >nul
-  title Проверка целостности системных файлов. [ SafeZone.cc ]
+  title Проверка целостности системных файлов / 0.7.5  [ SafeZone.cc ]
    ::SetLocal EnableExtensions EnableDelayedExpansion 
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -120,7 +120,7 @@ exit /b
  
  
  :CheckAdmin
-
+IF EXIST "%ProgramFiles(x86)%" (set arhitektura=64) else (set arhitektura=32)
 net continue winmgmt 2>&1 |>NUL find "5" && (
 	echo .........sfco ErrorLevel[ %ErrorLevel% ].........нет прав доступа!
     Echo Требуются права Администратора.
@@ -134,11 +134,12 @@ net continue winmgmt 2>&1 |>NUL find "5" && (
 	goto Exite
 ) || (
    > "%log%" (
-	IF EXIST "%ProgramFiles(x86)%" (set arhitektura=64) else (set arhitektura=32)
+	
     echo.
     echo ::::::::  %Userprofile%  
     echo ::::::::  %DATE%  / %TIME%
-    call echo ::::::::  %VERSION%  / %%arhitektura%%
+    echo ::::::::  %VERSION%  / Архитектура: %arhitektura%
+	echo ::::::::  Версия скрипта / 0.7.5 [15.12.2018]
 	echo ::::::::  SafeZone.cc
     echo.
     echo.
@@ -344,6 +345,8 @@ echo.
 :: Открыть "чистый" отчет программой по-умолчанию
 start "" "%CD%"
 start "" "%log%"
+del /q %log%
+del /q %log2%
 echo Нажмите клавишу ENTER чтобы продолжить...
 pause > nul
 exit /b
@@ -524,7 +527,7 @@ exit /b
 
 echo.
 		echo Ожидайте...
-wmic qfe list | find "KB2966583"
+REG QUERY "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages" /f  "KB2966583" /k
 
 	if %ErrorLevel% EQU 0 (
 		cls 
